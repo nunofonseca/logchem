@@ -1,0 +1,227 @@
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  File Name:  t-unittestcases.test
+##
+##  @short      Provides a unit test source file for t-unit Tcl unit test package
+##  @author     Original author ~ Joe Boyle
+##  @date       Original date   ~ 21-Oct-2005
+##  @version    1.0   Initial release
+##
+##  File syntax and semantics:
+##    The file is organized as follows.  Any line that starts with a "hash"
+##    symbol (one or more) is considered a comment and will not be executed
+##    as a test.  Comments MUST take the entire line; no "in-line" comment
+##    syntax is provided.  All other lines are considered to be commands.
+##
+##    Command lines are structured as follows.  Everything up to the first
+##    occurrance of the vertical bar symbol ("|" or "pipe" as it is known in
+##    UNIX/Solaris), is considered a Tcl command which may include arguments
+##    to that command.  There should be two, and only two, occurrances of the
+##    pipe.  Everything between the two pipes is considered to be the expected
+##    result of the execution of that line's command.  Everything occurring
+##    after the second occurrance of the pipe is considered to be the result
+##    returned by the command; this can include either "OK", or some other
+##    phrase indicating an expected "forced error condition" which occurs
+##    when the command's error handling functionality is being tested.
+##
+##    Note that blank lines are considered comments.
+##
+##    Note also that the "PASS" or "FAIL" is with respect to the t-unit procedure
+##    result, NOT to the TESTED procedure result.  This can be confusing at first
+##    but it all works out when you see the test results on the stdout display.
+##
+##    Note that string variables containing spaces must be surrounded by double
+##    quotes AND BY CURLY BRACES to make the Tcl interpreter treat them as a
+##    single string entity.  Otherwise, the string will break at the first space,
+##    causing an unexpected result.
+##
+##    An annotated example is as follows, with ">" indicating the file margin:
+##
+##    >## This is a comment line
+##    >## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ another comment
+##    >
+##    >## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##    >##  This is an example of a block comment
+##    >## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##    >  t-unit::assertEquals 12.34 12.34       |  PASS  |     OK
+##    >  t-unit::assertFalse  TRUE              |  FAIL  |     NOT_FALSE
+##
+##
+##    This test case file assumes the current Tcl environment has included six
+##    defined procedures, named "e1" through "e6", and producing outputs as
+##    in the following table:
+##
+##      proc  e1 {} { return "hello"   }
+##      proc  e2 {} { return "world"   }
+##      proc  e3 {} { return 12345.678 }
+##      proc  e4 {} { return 2345.6789 }
+##      proc  e5 {} { return FALSE     }
+##      proc  e6 {} { return TRUE      }
+##      proc  e7 {} { return {1 2 3 4 5} }
+##      proc  e8 { input } { return $input }
+##      proc  e9 {} { return {"A" "BC99" "123" "NONE"} }
+##
+##    This test case file assumes the current Tcl environment has included six
+##    defined lists, named "L1" through "L6", consisting of elements as listed
+##    in the following table:
+##
+##      set   L1 {1 2 3}
+##      set   L2 {1 2 3}
+##      set   L3 {}
+##      set   L4 {}
+##      set   L5 {2 3 4}
+##      set   L6 {}
+##
+##    This test case file assumes the current Tcl environment has included six
+##    global arrays, named "A1" through "A6", consisting of elements as listed
+##    in the following table:
+##
+##      array set A1 {0 0 1 100 2 200}
+##      array set A2 {2 200 1 100 0 0}
+##      array set A3 {}
+##      array set A4 {}
+##      set A5(test) "this should work"
+##      set A6(test) "this should not work"
+##
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##
+##  Revision history
+##  ----------------
+##
+##   Rev    Rev. Date   Released by:  Revision Description
+##  -----  -----------  ------------  -------------------------------------------------------------
+##  1.0    20-Feb-2006  Joe Boyle     Intial version for release of t-unit
+##  1.0_1  03-Apr-2006  Joe Boyle     Added tests for new procedure "assertEqualsListResult"
+##
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  SET UP MODULE GLOBAL VARIABLES HERE
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   global L1 L2 L3 L4 L5 L6                                          |  FAIL  |
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  Tests of the t-unit::assertEquals routine
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   puts "-- Testing assertEquals procedure --"                       |  FAIL  |
+   t-unit::assertEquals 12.34    12.34                               |  PASS  |  OK
+   t-unit::assertEquals "hello"  "hello"                             |  PASS  |  OK
+   t-unit::assertEquals "hello"  "world"                             |  FAIL  |  NOT_EQUAL
+   t-unit::assertEquals 2        2                                   |  PASS  |  OK
+   t-unit::assertEquals 2        3                                   |  FAIL  |  NOT_EQUAL
+   t-unit::assertEquals 12345    12345                               |  PASS  |  OK
+   t-unit::assertEquals 12345    12345.0                             |  FAIL  |  ARG_MISMATCH
+   t-unit::assertEquals TRUE     TRUE                                |  PASS  |  OK
+   t-unit::assertEquals FALSE    false                               |  FAIL  |  NOT_EQUAL
+   t-unit::assertEquals this     that                                |  FAIL  |  NOT_EQUAL
+   t-unit::assertEquals [e1]     [e1]                                |  PASS  |  OK
+   t-unit::assertEquals [e2]     [e2]                                |  PASS  |  OK
+   t-unit::assertEquals ""       123                                 |  FAIL  |  EMPTY_ARG
+   t-unit::assertEquals 456      ""                                  |  FAIL  |  EMPTY_ARG
+   t-unit::assertEquals [e1]     [e2]                                |  FAIL  |  NOT_EQUAL
+   t-unit::assertEquals 12.34    12.34    "msg string"               |  PASS  |  OK
+   t-unit::assertEquals "hello"  "world"  "msg string"               |  FAIL  |  NOT_EQUAL
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  Tests of the t-unit::assertEqualsList routine
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   puts "-- Testing assertEqualsList procedure --"                   |  FAIL  |
+   t-unit::assertEqualsList   $L1      $L1                           |  PASS  |  OK
+   t-unit::assertEqualsList   FALSE    FALSE                         |  PASS  |  OK
+   t-unit::assertEqualsList   $L2      $L2                           |  PASS  |  OK
+   t-unit::assertEqualsList   $L1      $L2                           |  PASS  |  OK
+   t-unit::assertEqualsList   $L1      $L6                           |  FAIL  |  LEN_MISMATCH
+   t-unit::assertEqualsList   $L5      ""                            |  FAIL  |  LEN_MISMATCH
+   t-unit::assertEqualsList   $L4      $L4                           |  PASS  |  OK
+   t-unit::assertEqualsList   $L1      $L6                           |  FAIL  |  LEN_MISMATCH
+   t-unit::assertEqualsList   {1 2 3}  {1 2 3}                       |  PASS  |  OK
+   t-unit::assertEqualsList   {a b}    {{a b} c}                     |  FAIL  |  NOT_EQUAL
+   t-unit::assertEqualsList   {1 2 3}  $L2  "msg string"             |  PASS  |  OK
+   t-unit::assertEqualsList   $L3  $L5  "msg string"                 |  FAIL  |  LEN_MISMATCH
+   t-unit::assertEqualsList   [e8 $L1] $L1                           |  PASS  |  OK
+   t-unit::assertEqualsList   [e7]     {1 2 3 4 5}                   |  PASS  |  OK
+   t-unit::assertEqualsList   [e7]     {1 2 3 4 6}                   |  FAIL  |  NOT_EQUAL
+   t-unit::assertEqualsList   [e8 $L1] {1 2}                         |  FAIL  |  LEN_MISMATCH
+   t-unit::assertEqualsList   [e7]     {1 2 3 4 5}                   |  PASS  |  OK
+   t-unit::assertEqualsList   [e7]     {1 2 3 4 6}                   |  FAIL  |  NOT_EQUAL
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  Tests of the t-unit::assertEqualsReal routine
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   puts "-- Testing assertEqualsReal procedure --"                   |  FAIL  |
+   t-unit::assertEqualsReal   12.34    12.3     0.1                  |  PASS  |  OK
+   t-unit::assertEqualsReal   12.34    12.3     0.01                 |  FAIL  |  NOT_EQUAL
+   t-unit::assertEqualsReal   12.34   -12.34    0.1                  |  FAIL  |  NOT_EQUAL
+   t-unit::assertEqualsReal   12.34    12.34    0.000001             |  PASS  |  OK
+   t-unit::assertEqualsReal   12.34123 12.34124 0.0001               |  PASS  |  OK
+   t-unit::assertEqualsReal   12.34123 12.34124 0.00001              |  FAIL  |  NOT_EQUAL
+   t-unit::assertEqualsReal  -12.34    12.34    0.1                  |  FAIL  |  NOT_EQUAL
+   t-unit::assertEqualsReal  -12.34   -12.34    0.1                  |  PASS  |  OK
+   t-unit::assertEqualsReal   [e3]     [e3]     0.001                |  PASS  |  OK
+   t-unit::assertEqualsReal   [e4]     [e4]     0.001                |  PASS  |  OK
+   t-unit::assertEqualsReal   [e3]     [e4]     0.001                |  FAIL  |  NOT_EQUAL
+   t-unit::assertEqualsReal   ""       123      0.1                  |  FAIL  |  EMPTY_ARG
+   t-unit::assertEqualsReal   456      ""       0.1                  |  FAIL  |  EMPTY_ARG
+   t-unit::assertEqualsReal   456      789      ""                   |  FAIL  |  EMPTY_ARG
+   t-unit::assertEqualsReal   [e4]     [e4]     0.001 "msg string"   |  PASS  |  OK
+   t-unit::assertEqualsReal   [e3]     [e4]     0.001 "msg string"   |  FAIL  |  NOT_EQUAL
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  Tests of the t-unit::assertFalse routine
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   puts "-- Testing assertFalse procedure --"                        |  FAIL  |
+   t-unit::assertFalse  FALSE                                        |  PASS  |  OK
+   t-unit::assertFalse  TRUE                                         |  FAIL  |  NOT_FALSE
+   t-unit::assertFalse  0                                            |  FAIL  |  NOT_FALSE
+   t-unit::assertFalse  1                                            |  FAIL  |  NOT_FALSE
+   t-unit::assertFalse  [e5]                                         |  PASS  |  OK
+   t-unit::assertFalse  [e6]                                         |  FAIL  |  NOT_FALSE
+   t-unit::assertFalse  [e5]  "msg string"                           |  PASS  |  OK
+   t-unit::assertFalse  [e6]  "msg string"                           |  FAIL  |  NOT_FALSE
+   t-unit::assertFalse  ""                                           |  FAIL  |  EMPTY_ARG
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  Tests of the t-unit::assertNotEquals routine
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   puts "-- Testing assertNotEquals procedure --"                    |  FAIL  |
+   t-unit::assertNotEquals 12.34    12.34                            |  FAIL  |  EQUAL
+   t-unit::assertNotEquals "hello"  "hello"                          |  FAIL  |  EQUAL
+   t-unit::assertNotEquals "hello"  "world"                          |  PASS  |  OK
+   t-unit::assertNotEquals 2        2                                |  FAIL  |  EQUAL
+   t-unit::assertNotEquals 2        3                                |  PASS  |  OK
+   t-unit::assertNotEquals 12345    12345                            |  FAIL  |  EQUAL
+   t-unit::assertNotEquals 12345    12345.0                          |  FAIL  |  ARG_MISMATCH
+   t-unit::assertNotEquals TRUE     TRUE                             |  FAIL  |  EQUAL
+   t-unit::assertNotEquals FALSE    false                            |  PASS  |  OK
+   t-unit::assertNotEquals this     that                             |  PASS  |  OK
+   t-unit::assertNotEquals [e1]     [e1]                             |  FAIL  |  EQUAL
+   t-unit::assertNotEquals [e2]     [e2]                             |  FAIL  |  EQUAL
+   t-unit::assertNotEquals [e1]     [e2]                             |  PASS  |  OK
+   t-unit::assertNotEquals ""       123                              |  FAIL  |  EMPTY_ARG
+   t-unit::assertNotEquals 456      ""                               |  FAIL  |  EMPTY_ARG
+   t-unit::assertNotEquals [e2]     [e2]  "msg string"               |  FAIL  |  EQUAL
+   t-unit::assertNotEquals [e1]     [e2]  "msg string"               |  PASS  |  OK
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  Tests of the t-unit::assertTrue routine
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   puts "-- Testing assertTrue procedure --"                         |  FAIL  |
+   t-unit::assertTrue   TRUE                                         |  PASS  |  OK
+   t-unit::assertTrue   FALSE                                        |  FAIL  |  NOT_TRUE
+   t-unit::assertTrue   0                                            |  FAIL  |  NOT_TRUE
+   t-unit::assertTrue   1                                            |  FAIL  |  NOT_TRUE
+   t-unit::assertTrue   [e6]                                         |  PASS  |  OK
+   t-unit::assertTrue   [e5]                                         |  FAIL  |  NOT_TRUE
+   t-unit::assertTrue   [e6]  "msg string"                           |  PASS  |  OK
+   t-unit::assertTrue   [e5]  "msg string"                           |  FAIL  |  NOT_TRUE
+   t-unit::assertTrue   ""                                           |  FAIL  |  EMPTY_ARG
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##  Tests of the t-unit::assertEqualsArray routine
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   puts "-- Testing assertEqualsArray procedure --"                  |  FAIL  |
+   t-unit::assertEqualsArray  A1      A1                             |  PASS  |  OK
+   t-unit::assertEqualsArray  FALSE   FALSE                          |  FAIL  |  NOT_ARRAY
+   t-unit::assertEqualsArray  A2      A2                             |  PASS  |  OK
+   t-unit::assertEqualsArray  A1      A2                             |  PASS  |  OK
+   t-unit::assertEqualsArray  A1      L6                             |  FAIL  |  NOT_ARRAY
+   t-unit::assertEqualsArray  A5      ""                             |  FAIL  |  NOT_ARRAY
+   t-unit::assertEqualsArray  A4      A4                             |  PASS  |  OK
+   t-unit::assertEqualsArray  A1      A6  "msg string"               |  FAIL  |  SIZE_MISMATCH
+   t-unit::assertEqualsArray  A6      A5                             |  FAIL  |  NOT_EQUAL
