@@ -1,0 +1,6 @@
+#!/bin/bash
+if [ "$1-" = "-" ]; then
+   exit 0;
+fi
+P=`grep ">" $1 | sed "s/.*<\(.*\)>/\1/"|sort -u`
+echo $P
