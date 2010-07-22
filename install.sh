@@ -46,14 +46,20 @@ fi
 function check_cmd {
     cmd_name=$1
     cmd_exec=$2
-
+    cmd_mandatory=$3
+    # by default all cmds are mandatory
     # check if cmd_name is in the path
     P=`bash -c "which $cmd_exec | cut -f 2 -d\  2> /dev/null"`
-    if [ "$P" = "" ]; then 
-	echo "ERROR: $cmd_name not found" > /dev/stderr
-	exit 1
+    if [ "$P" == "" ] && [ "$cmd_mandatory" == "no" ]; then 
+	echo "WARNING: $cmd_name not found" > /dev/stderr
+    else
+	if [ "$P" == "" ]; then 
+	    echo "ERROR: $cmd_name not found" > /dev/stderr
+	    exit 1
+	else
+	    echo "INFO: $cmd_name found: $P"   > /dev/stderr
+	fi
     fi
-    echo "INFO: $cmd_name found: $P"   > /dev/stderr
     echo "$P"
 }
 
@@ -78,8 +84,8 @@ check_cmd OpenBabel babel > /dev/null
 # perl
 check_cmd perl perl > /dev/null
 
-# JChem
-check_cmd JChem generatemd > /dev/null
+# JChem - optional
+check_cmd JChem generatemd no > /dev/null
 
 # gzip
 check_cmd gzip gzip > /dev/null
