@@ -22,7 +22,26 @@
 ##################################################################################
 # $Id: install.sh,v 1.8 2010/06/30 14:53:47 nf Exp $
 ###########################################################################################/
-LogChemDir=`pwd`
+
+if [ "$1" == "-h" ]; then
+    echo "Usage: install.sh [logchem directory]"
+    echo "LogCHEM is installed in the current directory if no directory is provided."
+    exit 0
+fi
+
+if [ "$1-" == "-" ]; then
+    LogChemDir=`pwd`
+else
+    if [ ! -e $1 ]; then
+	echo "creating $1"
+	mkdir $1
+    fi
+    if [ ! -d $1 ]; then
+	echo "Error: $1 exists and is not a directory"
+	exit 1
+    fi
+    LogChemDir=$1
+fi
 
 function check_cmd {
     cmd_name=$1
@@ -70,9 +89,11 @@ check_cmd TK wish > /dev/null
 
 ###################################################
 # update path in scripts
-mkdir -p bin
-cd src/bin
+mkdir -p $LogChemDir/bin
+mkdir -p $LogChemDir/lib
 
+# Executables
+cd src/bin
 echo "INFO: Installing executables in $LogChemDir/bin"
 FILES="lc_sdf2plstruct lc_matchmol lc_runaleph lc_vmd  lc_sdf_list_props logchem lc_eval_pat lc_refine_pat lc_sdfconv.pl"
 for f in $FILES; do
@@ -87,10 +108,12 @@ for f in $FILES; do
     echo "done."
 done
 cd ../..
-
-sed -i "s,^logchem_dir(.*,logchem_dir('$LogChemDir').," src/pl/bk_template.b
-sed -i "s,^logchem_dir(.*,logchem_dir('$LogChemDir').," src/pl/logchem_matchmol.pl
-
+# Aux. files
+cd src
+cp -rf pl tcl $LogChemDir/lib
+sed -i "s,^logchem_dir(.*,logchem_dir('$LogChemDir').," $LogChemDir/lib/pl/bk_template.b
+sed -i "s,^logchem_dir(.*,logchem_dir('$LogChemDir').," $LogChemDir/lib/pl/logchem_matchmol.pl
+cd ..
 echo "***************************************************"
 echo "Please add $LogChemDir/bin to your path."
 echo "To start logchem run 'logchem'"
