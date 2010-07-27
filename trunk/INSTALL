@@ -1,0 +1,25 @@
+Installation Instructions
+*************************
+
+Copyright (C) 2010 Nuno A. Fonseca
+
+   This file is free documentation; the Free Software Foundation gives
+unlimited permission to copy, distribute and modify it.
+
+Installation
+============
+
+LogCHEM runs on Linux and Unix OS. To install just run the install.sh
+script and add the directory you provide to your shell's PATH.
+
+Procedure to install LogCHEM in a terminal window and assuming that you
+are in the LogCHEM's root directory: 
+
+1. ./install.sh <myinstallrootdir> (e.g., ./install.sh /usr/local) 
+2. export PATH=$PATH:myrootdir/bin (e.g., export PATH=$PATH:/usr/local/bin)
+
+By default, the install script installs LogCHEM to the working
+directory.
+
+
+
