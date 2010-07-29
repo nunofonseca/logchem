@@ -761,15 +761,15 @@ atom_bond_to_edge(atom_bond(_,A1,A2,T1,T2,W)) -->
 
 breaks_constraint(W2) :-
 	const(W1),
-	format('Check Constraint...~n~q~n~q~n???????????~n',[W1,W2]),
+%	format('Check Constraint...~n~q~n~q~n???????????~n',[W1,W2]),
 	subgraph(W1, W2), 
-	format('Constraint violated.~n',[]),
+%	format('Constraint violated.~n',[]),
 	!.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % holds true if W1 is subgraph of W2
 % subgraph(+W1, +W2)
 subgraph(W1, W2):-
-	format('subgraph:~q~n',[subgraph(W1, W2)]),
+%	format('subgraph:~q~n',[subgraph(W1, W2)]),
 	wundgraph_vertices(W1,Vert1),
 	wundgraph_vertices(W2,Vert2),
 	length(Vert1,S1),
