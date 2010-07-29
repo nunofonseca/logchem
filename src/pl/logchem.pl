@@ -51,9 +51,10 @@
 
 :- dynamic canonic/1, docompile/1, dooptimise/1.
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 docompile(on).
 dooptimise(off). % not really worth the cost
+canonize(on).
 
 do_not_compile_logchem :-
 	retractall(docompile(_)),
@@ -399,44 +400,54 @@ init_canonic:-
 	(V == -1 -> true ; trie_close(V)),
 	trie_open(NV), nb_setval(red_tries,NV).
 
-canonic((_:-false)) :- !.
-canonic((_:-atom(_,_,C))) :- !,
-        G = [atom(C)],
+%%%%%%%%%%%%%
+% canonic(+G)
+canonic(_G):-
+	canonize(off),!.
+canonic(G):-
+	canonic1(G).
+
+canonic1((_:-false)) :- !.
+canonic1((_:-atom(_,_,C))) :- !,
+%        G = [atom(C)],
+	normalized_graph((atom(_,_,C)),G,_),
         nb_getval(red_tries,Trie),
 	\+ trie_check_entry(Trie,G,_),
-	trie_put_entry(Trie,G,_).
-canonic((_:-Gs)) :-
+	trie_put_entry(Trie,G,_),
+	\+ breaks_constraint(G).
+
+canonic1((_:-Gs)):-
 	split_clause(Gs, GAtt, G),
 	G \= false, !,
 	simplify_atts_for_canonic(GAtt, GA),
-	wundgraph_new(Graph0),
-	make_graph(G, Graph0, Graph),
-	(
-	 canonic(off)
-	->
-	 true
-	;
-	 (
-	  canonic(old)
-	 ->
-	  G = (atom(C,V,T), _),
-	  LClause = [atom(V,T)| NGs],
-	  build_tree([(T.V)], Graph, C, NGs)
-	 ;
-	  morgan(Graph, SortedNodes),
-	  build_clause(SortedNodes, Graph, LClause)
-	 ),
-	 FullLClause = [GA|LClause],
-	 nb_getval(red_tries,Trie),
-	 \+ trie_check_entry(Trie,FullLClause,_),
-	 trie_put_entry(Trie,FullLClause,_),
-	 \+ breaks_constraint(Graph)
-	).
-canonic((_:-GAtt)) :-
+	normalized_graph(G,Graph,SortedNodes),
+	build_clause(SortedNodes, Graph, LClause),
+	FullLClause = [GA|LClause],
+	nb_getval(red_tries,Trie),
+	\+ trie_check_entry(Trie,FullLClause,_),
+	trie_put_entry(Trie,FullLClause,_),
+	\+ breaks_constraint(Graph).
+
+canonic1((_:-GAtt)) :-
 	simplify_atts_for_canonic(GAtt, GA),
 	nb_getval(red_tries,Trie),
 	\+ trie_check_entry(Trie,GA,_),
 	trie_put_entry(Trie,GA,_).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% normalized_graph(+Gs,-NormGs)
+normalized_graph(Gs,NormGs):-
+	normalized_graph(Gs,NormGs,_SortedGs).
+% normalized_graph(+Gs,-NormGs,-SortedGs)
+normalized_graph((atom(A,B,C)),Graph,[atom(C)]):-!,
+	wundgraph_new(Graph0),
+	make_graph((atom(A,B,C)), Graph0, Graph).
+normalized_graph(Gs,Graph,SortedGs):-
+	split_clause(Gs, _GAtt, G),
+	wundgraph_new(Graph0),
+	make_graph(G, Graph0, Graph),
+	morgan(Graph, SortedGs),
+	!.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Simplification of the clauses
@@ -452,7 +463,7 @@ simplify_atts_for_canonic('Benzene'(_A,B), 'Benzene'(B)) :- !.
 simplify_atts_for_canonic('Carboxylic_acid'(_A1,A,B,C,D),'Carboxylic_acid'(A,B,C,D)) :- !.
 % binary predicates
 simplify_atts_for_canonic(Prop, Prop) :- 
-	functor(Prop,Fa,_Arity),
+	functor(Prop,F,_Arity),
 	binary_att_member(F),
 	!.
 
@@ -724,10 +735,20 @@ add_weights([_-Node|SSimilar], W, [W-Node|Sorted], More) :-
 :- style_check(-discontiguous).
 :- dynamic_predicate([const/1],logical).
 
-constraint((atom(_,_,_),G)) :-
-	clause_to_edge_list(G, GL, []),
-%	format('New constraint ~w~n',[GL]),
-	assert(const(GL)).
+% constraint(+Con)
+constraint(Con) :-
+	preprocess_constraint(Con,PreCon),
+	assert(const(PreCon)),
+	(numbervars(Con,0,_),format('Added constraint: ~q~n',[Con]),fail;true),
+	!.
+
+preprocess_constraint((atom(A,B,C)),PreConstr):-!,
+	normalized_graph((atom(A,B,C)),PreConstr).
+preprocess_constraint((atom(A,B,C),Gs),PreConstr):-!,
+	normalized_graph((atom(A,B,C),Gs),PreConstr).
+preprocess_constraint((_,Gs),PreConstr):-% ignore the properties
+	preprocess_constraint(Gs,PreConstr).
+
 
 clause_to_edge_list((AtomBond,Gs)) -->
 	!,
@@ -741,36 +762,49 @@ atom_bond_to_edge(atom_bond(_,A1,A2,T1,T2,W)) -->
 
 breaks_constraint(W2) :-
 	const(W1),
-	format('>>>~w~n~w~n------------------~n',[W2,W1]),
+	format('Check Constraint...~n~q~n~q~n???????????~n',[W1,W2]),
 	subgraph(W1, W2), 
-	format('Constraint violated...~w~n',[W2]),
+	format('Constraint violated.~n',[]),
 	!.
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % holds true if W1 is subgraph of W2
-subgraph([Edge|W1], W2) :-
-	wundgraph_edges(W2,  W2Edges),
-	write('::::::::::::::':Edge),nl,
-	write(':::::>w1':W2Edges),nl,
-	subgraph_match(Edge, W2Edges, W1, W2).
+% subgraph(+W1, +W2)
+subgraph(W1, W2):-
+	format('subgraph:~q~n',[subgraph(W1, W2)]),
+	wundgraph_vertices(W1,Vert1),
+	wundgraph_vertices(W2,Vert2),
+	length(Vert1,S1),
+	length(Vert2,S2),
+	subgraph(S1,S2,Vert1,Vert2,W1,W2).
 
-subgraph_match(Edge, [Edge|Edges], W1, W2) :-
-	Edge = N1-(N2-K),
-	format('--->>>>~w-(~w-~w)~n',[N1,N2,K]),
-	wundgraph_del_edge(W2,N1,N2,K,W22),
-	subgraph_match_more_edges(W1, W22).
+subgraph(1,1,V,V,_,_):-!.
+subgraph(1,_,[N],V2,_,_):-!,
+	member(N,V2).
+subgraph(_,_,_,_,W1,W2):-
+	dgraphs:dgraph_edges(W1,  [W1Edge|W1Edges]),
+	dgraphs:dgraph_edges(W2,  W2Edges),
+	%format('call ~q~n',[subgraph_match(Edge, W2Edges, W1Edges, W2)]),
+	subgraph_match(W1Edge, W2Edges, W1Edges, W2Edges).
+
+% subgraph_match(+Edge_MatchGraph,EdgesMatchedGraph,Edges_MatchGraph,MatchedGraph)
+subgraph_match(Edge, [Edge|Edges], W1, W2):-
+%	W1Edge = N1-(N2-K),                       % (N1)---K---(N2)
+%	wundgraph_del_edge(W2,N1,N2,K,W22),
+	subgraph_match_more_edges([Edge|W1], W2).
 subgraph_match(Edge, [_|Edges], W1, W2) :-
 	subgraph_match(Edge, Edges, W1, W2).
 
+%
 subgraph_match_more_edges([], _).
 subgraph_match_more_edges([Edge|Edges], W2) :-
-	ground(Edge), !,
-	Edge = N1-(N2-K),
-	wundgraph_del_edge(W2,N1,N2,K,W22),
-	subgraph_match_more_edges(Edges, W2).
-subgraph_match_more_edges([edge(N1,N2,T)|Edges], W2) :-
-	Edge = N1-(N2-K),
-	wundgraph_neighbours(N1, W2, Ns),
-	member((N2-K), Ns),
-	wundgraph_del_edge(W2,N1,N2,K,W22),
-	subgraph_match_more_edges(Edges, W2).
-:-spy(subgraph_match_more_edges).
+%	Edge = N1-(N2-K),
+	delete(W2,Edge,W22),
+	subgraph_match_more_edges(Edges, W22).
+
+test:-
+	spy(logchem:subgraph),
+	logchem:subgraph(t(black('',_141250,_141251,''),black(black('',_141250,_141251,''),['Br'|_141264],[],black('',_141250,_141251,''))),t(black('',_140932,_140933,''),black(black('',_140932,_140933,''),['Br'|_140808],[['C'|_140867]-1],red(black('',_140932,_140933,''),['C'|_140867],[['Br'|_140808]-1],black('',_140932,_140933,''))))).
+%	logchem:subgraph(t(black('',_141461,_141462,''),black(red(black('',_141461,_141462,''),['C'|_141480],[['C'|_141487]-1],black('',_141461,_141462,'')),['C'|_141487],[['C'|_141480]-1,['Cl'|_141508]-1],red(black('',_141461,_141462,''),['Cl'|_141508],[['C'|_141487]-1],black('',_141461,_141462,'')))),t(black('',_140891,_140892,''),black(red(black('',_140891,_140892,''),['C'|_140696],[['C'|_140758]-1],black('',_140891,_140892,'')),['C'|_140758],[['C'|_140696]-1,['Cl'|_140822]-1],red(black('',_140891,_140892,''),['Cl'|_140822],[['C'|_140758]-1],black('',_140891,_140892,''))))).
+%	logchem:subgraph(t(black('',_141250,_141251,''),black(red(black('',_141250,_141251,''),['C'|_141269],[['C'|_141276]-1],black('',_141250,_141251,'')),['C'|_141276],[['C'|_141269]-1,['Cl'|_141297]-1],red(black('',_141250,_141251,''),['Cl'|_141297],[['C'|_141276]-1],black('',_141250,_141251,'')))),t(black('',_140932,_140933,''),black(black('',_140932,_140933,''),['Br'|_140808],[['C'|_140867]-1],red(black('',_140932,_140933,''),['C'|_140867],[['Br'|_140808]-1],black('',_140932,_140933,''))))).
+
+
