@@ -6,8 +6,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% -*- Mode: Prolog; -*-
 
-%:- use_module(logchem).
-:- load_files('logchem.pl',[silent(true)]).
+:- use_module(logchem).
+%:- load_files('logchem.pl',[silent(true)]).
 
 %% load the user settings, mode and determination declarations, and the database
 :- ['sdf.pl'].
