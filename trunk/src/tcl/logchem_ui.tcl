@@ -20,8 +20,6 @@
 #
 ##################################################################################
 
-
-
 package provide logchem_ui 1.0
 
 package require Tk 8.5
@@ -195,8 +193,7 @@ namespace eval logchem_ui {
 	    }]
 	}
 	
-	# make sure wrapping is turned off. This might piss off a few people,
-	# but it would screw up the display to have things wrap
+	# make sure wrapping is turned off. 
 	set opts(textopt) "$opts(textopt) -wrap none"
 	
     }
