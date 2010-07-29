@@ -19,7 +19,7 @@
 %    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% $Id: sdf2pl.pl,v 1.3 2010/06/30 14:56:46 nf Exp $
+% $Id$
 :- source.
 
 :- yap_flag(write_strings, on).
