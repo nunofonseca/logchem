@@ -8,3 +8,4 @@ The following features are expected to be included in LogCHEM, unfortunately we 
   * Extend the set of supported functional groups
   * Start a search for rules using a rule created/defined by the user
   * Test the rules on a unseen set of compounds
+  * User Manual
