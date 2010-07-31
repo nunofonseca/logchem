@@ -25,15 +25,16 @@
 
 go:-
 	unix(argv(Args)),
-	check_args(Args,[Src2Load,Dataset]),
+	check_args(Args,Src2Load,Dataset),
 	consult(Src2Load),
 	read_all(Dataset),
 	induce,
 	write_rules.
 
 check_args([Src,DS],Src,DS):-!.
-check_args(_,_):-
-	format('Error: Usage: lc_runaleph.pl src  dataset',[]),
+check_args(A,_,_):-
+	format('Errorq: Usage: lc_runaleph.pl src  dataset~n',[]),
+	%format('>>>~q~n',[A]),
 	nl,
 	halt.
 :-prolog_initialization(go).
