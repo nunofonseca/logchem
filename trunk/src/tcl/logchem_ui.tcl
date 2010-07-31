@@ -31,7 +31,7 @@ namespace eval logchem_ui {
     array set g {
 	LogCHEM_DIR     ""
 	appname         "iLogCHEM"
-        version   0.6.6
+        version   0.6.7
 	debug           1
 	proj_loaded     0
 	exitValue       0
