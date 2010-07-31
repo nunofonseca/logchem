@@ -27,6 +27,6 @@ if [ "-$LOGCHEM_DIR" = "-" ]; then
     exit
 fi
 cd $1
-yap -L $LOGCHEM_DIR/lib/pl/aleph.pl $2
+yap -l $LOGCHEM_DIR/lib/pl/lc_runaleph.pl -- $LOGCHEM_DIR/lib/pl/aleph.pl  $2
 
 
