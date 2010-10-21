@@ -115,6 +115,7 @@ for f in $FILES; do
 done
 cd ../..
 # Aux. files
+cp -rf images $LogChemDir
 cd src
 cp -rf pl tcl $LogChemDir/lib
 sed -i "s,^logchem_dir(.*,logchem_dir('$LogChemDir').," $LogChemDir/lib/pl/bk_template.b
