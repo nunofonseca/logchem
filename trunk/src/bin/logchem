@@ -34,7 +34,7 @@ if { $LOGCHEM_DIR == "" } {
     puts stderr "ERROR: LOGCHEM_DIR environment variable not set"
     exit 1
 }
-lappend auto_path $LOGCHEM_DIR/src/tcl
+lappend auto_path $LOGCHEM_DIR/lib/tcl
 
 package require logchem_ui 
 
